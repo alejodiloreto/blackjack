@@ -3,6 +3,12 @@ let deck = [];
 
 const types = ['C', 'D', 'H', 'S'];
 const specials = ['A', 'K', 'Q', 'J'];
+let playerScore = 0;
+let PCScore = 0;
+
+const askBtn = document.querySelector('#askBtn');
+const HTMLScores = document.querySelectorAll('small');
+
 
 const createDeck = () => {
   for( let i = 2; i <= 10; i++ ) {
@@ -40,4 +46,8 @@ const cardValue = ( card ) => {
   
 }
 
-cardValue( requestCard() );
+askBtn.addEventListener('click', () => {
+  const card = requestCard();
+  playerScore = playerScore + cardValue(card);
+  HTMLScores[0].innerHTML = playerScore;
+});
