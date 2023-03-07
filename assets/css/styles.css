@@ -12,6 +12,7 @@ html, body {
 }
 
 .card {
+  display: inline-block;
   position: relative;
   width: 150px;
   left: 100px;
