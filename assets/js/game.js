@@ -1,118 +1,124 @@
-
-const types = ['C', 'D', 'H', 'S'];
-const specials = ['A', 'K', 'Q', 'J'];
-let deck = [];
-let playerScore = 0;
-let PCScore = 0;
-
-const newGameBtn = document.querySelector('#newGameBtn');
-const stopBtn = document.querySelector('#stopBtn');
-const askBtn = document.querySelector('#askBtn');
-const playerCardsDiv = document.querySelector('#player-cards');
-const PCCardsDiv = document.querySelector('#pc-cards');
-const HTMLScores = document.querySelectorAll('small');
-
-const createDeck = () => {
-  for( let i = 2; i <= 10; i++ ) {
-    for(let type of types){
-      deck.push( i + type );
+(() => {
+  'use strict'
+  
+  let deck = [];
+  const types = ['C', 'D', 'H', 'S'], specials = ['A', 'K', 'Q', 'J'];
+  let score = [];
+  
+  const newGameBtn = document.querySelector('#newGameBtn');
+  const stopBtn = document.querySelector('#stopBtn');
+  const askBtn = document.querySelector('#askBtn');
+  const playerCardsDiv = document.querySelector('#player-cards');
+  const PCCardsDiv = document.querySelector('#pc-cards');
+  const scoreDisplays = document.querySelectorAll('small');
+  
+  const initializeGame = ( playersQty = 2 ) => {
+    deck = createDeck();
+    score = [];
+    for(let i = 0; i < playersQty ; i++){
+      score.push(0)
     }
+
+    scoreDisplays.forEach(elem => elem.innerText = 0);
+    playerCardsDiv.innerHTML = '';
+    PCCardsDiv.innerHTML = '';
+    askBtn.disabled = false;
+    stopBtn.disabled = false;
   }
 
-  for(let type of types){
-    for( let special of specials) {
-      deck.push( special + type );
+  const createDeck = () => {
+    deck = [];
+    for (let i = 2; i <= 10; i++) {
+      for (let type of types) {
+        deck.push(i + type);
+      }
     }
+
+    for (let type of types) {
+      for (let special of specials) {
+        deck.push(special + type);
+      }
+    }
+
+    return _.shuffle(deck);
   }
 
-  deck = _.shuffle( deck );
-  return deck;
-}
+  const requestCard = () => {
+    if (deck.length === 0) {
+      throw 'there are no more cards in the deck'
+    }
 
-createDeck();
-
-const requestCard = () => {
-  if(deck.length === 0) {
-    throw 'No hay mas cartas en el mazo'
+    return deck.pop();
   }
 
-  const card = deck.pop();
-  return card;
-}
+  const cardValue = (card) => {
+    const value = card.substring(0, card.length - 1);
+    return (isNaN(value)) ? (value === 'A' ? 11 : 10) : (value * 1);
+  }
 
-const cardValue = ( card ) => {
-  const value = card.substring(0, card.length - 1);
-  return (isNaN( value )) ? (value === 'A' ? 11 : 10) : (value * 1);
-}
+  const accScore = ( card, turn ) => {
+    score[turn] = score[turn] + cardValue( card );
+    scoreDisplays[turn].innerHTML = score[turn];
+    return score[turn];
+  }
 
-  const PCTurn = ( minimumScore ) => {
+  const renderCard = ( card, turn ) => {
+    const cardImg = document.createElement('img');
+    cardImg.src = `assets/cards/${card}.png`;
+    cardImg.classList.add('card');
+    (turn === 0) ? playerCardsDiv.append(cardImg) : PCCardsDiv.append(cardImg);
+  }
+
+  const calculateWinner = () => {
+    const [minimumScore, PCScore] = score;
+    setTimeout(() => {
+      if (PCScore === minimumScore) {
+        alert('Empate');
+      } else if (PCScore > 21 || minimumScore === 21) {
+        alert('Ganaste!');
+      } else if (minimumScore > 21) {
+        alert('Perdiste!');
+      } else {
+        alert('Perdiste!')
+      }
+    }, 100);
+  }
+
+  const PCTurn = (minimumScore) => {
+    let PCScore = 0;
     do {
       const card = requestCard();
-      PCScore = PCScore + cardValue(card);
-      HTMLScores[1].innerHTML = PCScore;
-    
-      const cardImg = document.createElement('img');
-      cardImg.src = `assets/cards/${ card }.png`;
-      cardImg.classList.add('card');
-      PCCardsDiv.append( cardImg );
-
-      if(minimumScore > 21){
-        break;
-      }
-
-    } while ( (PCScore < minimumScore) && (minimumScore < 21)  );
-    
-    setTimeout(() => {
-      if(PCScore === minimumScore){
-        alert('Tie');
-      } else if(PCScore > 21 || minimumScore === 21){
-        alert('You win!');
-      } else if(minimumScore > 21){
-        alert('Game over!');
-      } else {
-        alert('Game over!')
-      }
-    }, 10);
-
+      PCScore = accScore(card, 1);
+      renderCard(card, 1);
+    } while ((PCScore < minimumScore) && (minimumScore < 21));
+    calculateWinner();
   }
 
-askBtn.addEventListener('click', () => {
-  const card = requestCard();
-  playerScore = playerScore + cardValue(card);
-  HTMLScores[0].innerHTML = playerScore;
+  askBtn.addEventListener('click', () => {
+    const card = requestCard();
+    const playerScore = accScore(card, 0);
+    renderCard(card, 0);
+
+    if (playerScore > 21) {
+      askBtn.disabled = true;
+      stopBtn.disabled = true;
+      PCTurn(playerScore)
+    } else if (playerScore === 21) {
+      askBtn.disabled = true;
+      stopBtn.disabled = true;
+      PCTurn(playerScore)
+    }
+
+  });
   
-  const cardImg = document.createElement('img');
-  cardImg.src = `assets/cards/${ card }.png`;
-  cardImg.classList.add('card');
-  playerCardsDiv.append( cardImg );
-
-  if(playerScore > 21){
+  stopBtn.addEventListener('click', () => {
     askBtn.disabled = true;
     stopBtn.disabled = true;
-    PCTurn(playerScore)
-  } else if(playerScore === 21) {
-    askBtn.disabled = true;
-    stopBtn.disabled = true;
-    PCTurn(playerScore)
-  }
+    PCTurn(score[0]);
+  })
 
-});
+  newGameBtn.addEventListener('click', () => {
+    initializeGame();
+  })
 
-newGameBtn.addEventListener('click', () => {
-  deck = [];
-  deck = createDeck();
-  playerScore = 0;
-  PCScore = 0;
-  HTMLScores[0].innerText = PCScore;
-  HTMLScores[1].innerText = PCScore;
-  askBtn.disabled = false;
-  stopBtn.disabled = false;
-  playerCardsDiv.innerHTML = '';
-  PCCardsDiv.innerHTML = '';
-})
-
-stopBtn.addEventListener('click', () => {
-  askBtn.disabled = true;
-  stopBtn.disabled = true;
-  PCTurn( playerScore );
-})
+})();
