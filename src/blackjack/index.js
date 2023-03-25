@@ -49,7 +49,7 @@ const calculateWinner = () => {
     } else {
       alert('Perdiste!')
     }
-  }, 100);
+  }, 500);
 }
 
 const PCTurn = (minimumScore) => {
