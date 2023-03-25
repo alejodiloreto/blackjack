@@ -1,4 +1,4 @@
-# Project Name
+# Blackjack Game
 
 This is a simple implementation of the classic card game Blackjack, where the objective is to reach a total of 21 points or as close as possible without going over. In this version of the game, you will be playing against the computer, which is programmed to play strategically and try to beat you.
 
